@@ -84,7 +84,7 @@ class Algorithm:
         return -1
 
     @staticmethod
-    def merge_tree(root: BaseSGFNode, other_root: BaseSGFNode, comparator: typing.Callable[[BaseSGFNode, BaseSGFNode], int], merge_func: typing.Callable[[BaseSGFNode, BaseSGFNode], None] = None):
+    def merge_tree(root: BaseSGFNode, other_root: BaseSGFNode, comparator: typing.Callable[[BaseSGFNode, BaseSGFNode], int], merge_func: typing.Optional[typing.Callable[[BaseSGFNode, BaseSGFNode], None]] = None):
         """
         Merge two trees.
 
@@ -109,7 +109,7 @@ class Algorithm:
         Algorithm._merge_tree(root, other_root, comparator, merge_func)
 
     @staticmethod
-    def _merge_tree(root: BaseSGFNode, other_root: BaseSGFNode, comparator: typing.Callable[[BaseSGFNode, BaseSGFNode], int], merge_func: typing.Callable[[BaseSGFNode, BaseSGFNode], None]):
+    def _merge_tree(root: BaseSGFNode, other_root: BaseSGFNode, comparator: typing.Callable[[BaseSGFNode, BaseSGFNode], int], merge_func: typing.Optional[typing.Callable[[BaseSGFNode, BaseSGFNode], None]] = None):
         # store the children in a list to avoid modifying the tree while merging
         sorted_nodes = sorted(root.get_children_iter(), key=functools.cmp_to_key(comparator))
         other_nodes = list(other_root.get_children_iter())
@@ -119,7 +119,7 @@ class Algorithm:
 
         # TODO: raise error if children have duplicates
         for child in other_nodes:
-            index = Algorithm.bisect_left_with_comparator(sorted_nodes, child, comparator)
+            index = Algorithm.binary_search(sorted_nodes, child, comparator)
             if index != -1:
                 Algorithm.merge_tree(sorted_nodes[index], child, comparator, merge_func)
             elif index == -1:
