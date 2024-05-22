@@ -10,11 +10,11 @@ class NodeAllocator:
 
 
 class SGFParser:
-    def __init__(self, node_allocator: typing.Callable[[], SGFNode] = NodeAllocator().allocate):
+    def __init__(self, node_allocator: NodeAllocator = NodeAllocator()):
         self.node_allocator = node_allocator
 
-    def parse(self, sgf: str, start: int = 0) -> SGFNode:
-        lexer = SGFLexer(sgf, start)
+    def parse(self, sgf: str, start: int = 0, progress_callback: typing.Optional[typing.Callable[[int, int], None]] = None) -> SGFNode:
+        lexer = SGFLexer(sgf, start, progress_callback)
         root = SGFNode()  # dummy root
         current = root
         stack = []
@@ -76,7 +76,7 @@ class SGFParser:
 
                 # create a new node
                 stack.append(current)
-                current = self.node_allocator()
+                current = self.node_allocator.allocate()
                 stack[-1].add_child(current)
 
                 # update states

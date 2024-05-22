@@ -1,6 +1,7 @@
 import enum
 import re
 from .exceptions import LexicalError
+import typing
 
 
 class SGFTokenType(enum.Enum):
@@ -33,10 +34,11 @@ class SGFToken:
 
 
 class SGFLexer:
-    def __init__(self, sgf: str, start: int = 0):
+    def __init__(self, sgf: str, start: int = 0, progress_callback: typing.Optional[typing.Callable[[int, int], None]] = None):
         self.sgf = sgf
         self.index = start
         self.length = len(sgf)
+        self.progress_callback = progress_callback
 
     def next_token(self):
         if self.index >= self.length:
@@ -48,6 +50,11 @@ class SGFLexer:
                 value = match.group(0)
                 token = SGFToken(token_type, value, self.index, self.index + len(value))
                 self.index = token.end
+
+                # track progress
+                if self.progress_callback:
+                    self.progress_callback(self.index, self.length)
+
                 return token
 
-        raise LexicalError(f'Invalid character \'{self.sgf[self.index]}\' at {self.index}')
+        raise LexicalError('Invalid character', self.index, self.index + 1, detail=True, sgf=self.sgf)
