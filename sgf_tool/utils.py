@@ -84,32 +84,41 @@ class Algorithm:
         return -1
 
     @staticmethod
-    def merge_tree(root: BaseSGFNode, other_root: BaseSGFNode, comparator: typing.Callable[[BaseSGFNode, BaseSGFNode], int], merge_func: typing.Callable[[BaseSGFNode, BaseSGFNode], BaseSGFNode]):
+    def merge_tree(root: BaseSGFNode, other_root: BaseSGFNode, comparator: typing.Callable[[BaseSGFNode, BaseSGFNode], int], merge_func: typing.Callable[[BaseSGFNode, BaseSGFNode], None] = None):
         """
         Merge two trees.
 
-        comparator: (BaseSGFNode, BaseSGFNode) -> int
-            Compare two nodes.
-            Return 0 if they are equal.
-            Return -1 if the first node is less than the second node.
-            Return 1 if the first node is greater than the second node.
+        The two trees must have the same root node. After merging, the nodes in the second tree (other_root) will be merged into the first tree (root). 
+        Common nodes will remain unchanged, and differing nodes in the second tree will be moved to the first tree.
 
-        merge_func: (BaseSGFNode, BaseSGFNode) -> BaseSGFNode
-            Called when two nodes are equal.
-            Return the merged node.
+        Args:
+            root (BaseSGFNode): The root node of the first tree.
+            other_root (BaseSGFNode): The root node of the second tree.
+            comparator (Callable[[BaseSGFNode, BaseSGFNode], int]): A function to compare two nodes.
+                - Returns 0 if the nodes are equal.
+                - Returns -1 if the first node is less than the second node.
+                - Returns 1 if the first node is greater than the second node.
+            merge_func (Callable[[BaseSGFNode, BaseSGFNode], None], optional): A function called when two nodes are equal.
+                If provided, it can be used to merge the properties of the two nodes by modifying the properties of the first node.
+
+        Raises:
+            ValueError: If the root nodes of the two trees are not equal according to the comparator.
         """
         if comparator(root, other_root) != 0:
             raise ValueError("The two roots are not equal.")
         Algorithm._merge_tree(root, other_root, comparator, merge_func)
 
     @staticmethod
-    def _merge_tree(root: BaseSGFNode, other_root: BaseSGFNode, comparator: typing.Callable[[BaseSGFNode, BaseSGFNode], int], merge_func: typing.Callable[[BaseSGFNode, BaseSGFNode], BaseSGFNode]):
+    def _merge_tree(root: BaseSGFNode, other_root: BaseSGFNode, comparator: typing.Callable[[BaseSGFNode, BaseSGFNode], int], merge_func: typing.Callable[[BaseSGFNode, BaseSGFNode], None]):
+        # store the children in a list to avoid modifying the tree while merging
+        sorted_nodes = sorted(root.get_children_iter(), key=functools.cmp_to_key(comparator))
+        other_nodes = list(other_root.get_children_iter())
+
         if merge_func is not None:
             merge_func(root, other_root)
 
-        sorted_nodes = sorted(root.get_children_iter(), key=functools.cmp_to_key(comparator))
         # TODO: raise error if children have duplicates
-        for child in list(other_root.get_children_iter()):
+        for child in other_nodes:
             index = Algorithm.bisect_left_with_comparator(sorted_nodes, child, comparator)
             if index != -1:
                 Algorithm.merge_tree(sorted_nodes[index], child, comparator, merge_func)
