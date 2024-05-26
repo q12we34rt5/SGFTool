@@ -19,6 +19,10 @@ class SGFParser:
         current = root
         stack = []
 
+        # cache data
+        cache_tag = 'DUMMY_TAG'
+        cache_values = ['DUMMY_VALUE']
+
         # states
         next_can_be_left_paren = True
         next_can_be_right_paren = False
@@ -52,6 +56,11 @@ class SGFParser:
                 if len(stack) == 0:
                     raise SGFError('Unmatched right parentheses', token.start, token.end, detail=True, sgf=sgf)
 
+                # store tag and value to current node if needed
+                if cache_values is not None:
+                    current[cache_tag] = cache_values
+                    cache_values = None
+
                 # pop until '('
                 while True:
                     if len(stack) == 0:
@@ -74,6 +83,11 @@ class SGFParser:
                 if not next_can_be_semicolon:
                     raise SGFError('Unexpected semicolon', token.start, token.end, detail=True, sgf=sgf)
 
+                # store tag and value to current node if needed
+                if cache_values is not None:
+                    current[cache_tag] = cache_values
+                    cache_values = None
+
                 # create a new node
                 stack.append(current)
                 current = self.node_allocator.allocate()
@@ -90,6 +104,11 @@ class SGFParser:
                 if not next_can_be_tag:
                     raise SGFError(f'Unexpected tag {token.value}', token.start, token.end, detail=True, sgf=sgf)
 
+                # store tag and value to current node if needed
+                if cache_values is not None:
+                    current[cache_tag] = cache_values
+                    cache_values = None
+
                 cache_tag = token.value  # cache the tag, will be used when the value comes
 
                 # update states
@@ -103,11 +122,10 @@ class SGFParser:
                 if not next_can_be_value:
                     raise SGFError(f'Unexpected value {token.value}', token.start, token.end, detail=True, sgf=sgf)
 
-                if cache_tag not in current:
-                    current[cache_tag] = []
-
+                if cache_values is None:
+                    cache_values = []
                 value = token.value[1:-1]
-                current[cache_tag].append(value)
+                cache_values.append(value)
 
                 # update states
                 next_can_be_left_paren = True
