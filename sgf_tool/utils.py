@@ -32,6 +32,86 @@ class Algorithm:
                 queue.append((child, depth + 1))
 
     @staticmethod
+    def dfs_iterator(root: BaseSGFNode):
+        """
+        Depth-first search iterator on the tree.
+        """
+        stack = [(root, 0)]
+        while len(stack) > 0:
+            current, depth = stack.pop()
+            yield current, depth
+            for child in reversed(list(current.get_children_iter())):
+                stack.append((child, depth + 1))
+
+    @staticmethod
+    def bfs_iterator(root: BaseSGFNode):
+        """
+        Breadth-first search iterator on the tree.
+        """
+        queue = deque([(root, 0)])
+        while len(queue) > 0:
+            current, depth = queue.popleft()
+            yield current, depth
+            for child in current.get_children_iter():
+                queue.append((child, depth + 1))
+
+    @staticmethod
+    def bottom_up_dfs(root: BaseSGFNode, visit_func: typing.Callable[[BaseSGFNode, int], None]):
+        """
+        Bottom-up depth-first search on the tree.
+        """
+        Algorithm._bottom_up_dfs(root, visit_func, 0)
+
+    @staticmethod
+    def _bottom_up_dfs(root: BaseSGFNode, visit_func: typing.Callable[[BaseSGFNode, int], None], depth: int):
+        for child in list(root.get_children_iter()):
+            Algorithm._bottom_up_dfs(child, visit_func, depth + 1)
+        visit_func(root, depth)
+
+    @staticmethod
+    def bottom_up_bfs(root: BaseSGFNode, visit_func: typing.Callable[[BaseSGFNode, int], None]):
+        """
+        Bottom-up breadth-first search on the tree.
+        """
+        visited_nodes = []
+        queue = deque([(root, 0)])
+        while len(queue) > 0:
+            current, depth = queue.popleft()
+            visited_nodes.append((current, depth))
+            for child in reversed(list(current.get_children_iter())):
+                queue.append((child, depth + 1))
+        for node, depth in reversed(visited_nodes):
+            visit_func(node, depth)
+
+    @staticmethod
+    def bottom_up_dfs_iterator(root: BaseSGFNode):
+        """
+        Bottom-up depth-first search iterator on the tree.
+        """
+        yield from Algorithm._bottom_up_dfs_iterator(root, 0)
+
+    @staticmethod
+    def _bottom_up_dfs_iterator(root: BaseSGFNode, depth: int):
+        for child in list(root.get_children_iter()):
+            yield from Algorithm._bottom_up_dfs_iterator(child, depth + 1)
+        yield root, depth
+
+    @staticmethod
+    def bottom_up_bfs_iterator(root: BaseSGFNode):
+        """
+        Bottom-up breadth-first search iterator on the tree.
+        """
+        visited_nodes = []
+        queue = deque([(root, 0)])
+        while len(queue) > 0:
+            current, depth = queue.popleft()
+            visited_nodes.append((current, depth))
+            for child in reversed(list(current.get_children_iter())):
+                queue.append((child, depth + 1))
+        for node, depth in reversed(visited_nodes):
+            yield node, depth
+
+    @staticmethod
     def find_nodes_with_property(root: BaseSGFNode, tag: str, value: str, value_index: int = 0) -> typing.List[BaseSGFNode]:
         """
         Find nodes with a specific property.
@@ -88,7 +168,7 @@ class Algorithm:
         """
         Merge two trees.
 
-        The two trees must have the same root node. After merging, the nodes in the second tree (other_root) will be merged into the first tree (root). 
+        The two trees must have the same root node. After merging, the nodes in the second tree (other_root) will be merged into the first tree (root).
         Common nodes will remain unchanged, and differing nodes in the second tree will be moved to the first tree.
 
         Args:
