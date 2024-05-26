@@ -1,4 +1,6 @@
 import abc
+from collections import OrderedDict
+import typing
 
 
 class BaseSGFNode(abc.ABC):
@@ -82,14 +84,16 @@ class BaseSGFNode(abc.ABC):
 
 class SGFNode(BaseSGFNode):
     def __init__(self):
-        self.parent = None
-        self.child = None
-        self.next_sibling = None
-        self.num_children = 0
-        self.properties = {}
+        self.parent: typing.Optional[SGFNode] = None
+        self.child: typing.Optional[SGFNode] = None
+        self.next_sibling: typing.Optional[SGFNode] = None
+        self.num_children: int = 0
+        self.properties: OrderedDict[str, list[str]] = OrderedDict()
 
     def __setitem__(self, key, value):
-        self.properties[key] = value
+        if not hasattr(value, '__iter__') or isinstance(value, str):
+            raise ValueError('Value must be an iterable object other than str.')
+        self.properties[key] = list(value)
 
     def __getitem__(self, key):
         return self.properties[key]
