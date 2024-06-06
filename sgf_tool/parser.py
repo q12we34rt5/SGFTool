@@ -150,8 +150,8 @@ class SGFParser:
             raise SGFError('Unmatched left parentheses', last_left_paren.start, last_left_paren.end, detail=True, sgf=sgf)
 
         # remove the dummy root
-        root = root.child
+        root = root.get_child(0)
         if root:
-            root.parent = None
+            root.detach()
 
         return root
