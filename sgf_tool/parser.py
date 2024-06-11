@@ -10,18 +10,37 @@ class NodeAllocator:
 
 
 class SGFParser:
+    class __DummyNode(SGFNode):
+        def __init__(self):
+            super().__init__()
+
+        def get_child(self, index):
+            return super().get_child(index)
+
+        def add_child(self, child):
+            if self.child is not None:
+                raise RuntimeError('Dummy node cannot have more than one child')
+            self.child = child
+
     def __init__(self, node_allocator: NodeAllocator = NodeAllocator()):
         self.node_allocator = node_allocator
 
-    def parse(self, sgf: str, start: int = 0, progress_callback: typing.Optional[typing.Callable[[int, int], None]] = None) -> SGFNode:
+    def parse(self, sgf: str, start: int = 0, progress_callback: typing.Optional[typing.Callable[[int, int], None]] = None) -> typing.Optional[SGFNode]:
+        iterator = self.parse_iterator(sgf, start, progress_callback)
+        root = next(iterator, None)
+        for _ in iterator:
+            pass
+        return root
+
+    def parse_iterator(self, sgf: str, start: int = 0, progress_callback: typing.Optional[typing.Callable[[int, int], None]] = None) -> typing.Generator[SGFNode, None, None]:
         lexer = SGFLexer(sgf, start, progress_callback)
-        root = SGFNode()  # dummy root
+        root = self.__DummyNode()  # dummy root
         current = root
         stack = []
 
         # cache data
-        cache_tag = 'DUMMY_TAG'
-        cache_values = ['DUMMY_VALUE']
+        # cache_tag = None
+        cache_values = None  # ['DUMMY_VALUE']
 
         # states
         next_can_be_left_paren = True
@@ -60,6 +79,7 @@ class SGFParser:
                 if cache_values is not None:
                     current[cache_tag] = cache_values
                     cache_values = None
+                    yield current
 
                 # pop until '('
                 while True:
@@ -87,6 +107,7 @@ class SGFParser:
                 if cache_values is not None:
                     current[cache_tag] = cache_values
                     cache_values = None
+                    yield current
 
                 # create a new node
                 stack.append(current)
@@ -153,5 +174,3 @@ class SGFParser:
         root = root.get_child(0)
         if root:
             root.detach()
-
-        return root
